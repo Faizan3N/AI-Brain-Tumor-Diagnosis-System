@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Brain Tumor Diagnostic System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0b0e14;
+            --bg-panel: #12161f;
+            --bg-card: #161b22;
+            --bg-card-hover: #1c2330;
+            --border-subtle: rgba(0, 242, 255, 0.12);
+            --border-glow: rgba(0, 242, 255, 0.35);
+            --accent-cyan: #00f2ff;
+            --accent-blue: #3b82f6;
+            --accent-violet: #8b5cf6;
+            --text-primary: #eef2f7;
+            --text-muted: #8b98a8;
+            --text-dim: #5c6a7a;
+            --success: #22c55e;
+            --sidebar-width: 260px;
+            --radius: 14px;
+            --radius-sm: 10px;
+            --font: "DM Sans", system-ui, sans-serif;
+            --font-mono: "JetBrains Mono", monospace;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Ambient background */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0, 242, 255, 0.08), transparent 50%),
+                radial-gradient(ellipse 60% 40% at 90% 100%, rgba(139, 92, 246, 0.07), transparent 45%),
+                radial-gradient(ellipse 50% 30% at 70% 20%, rgba(59, 130, 246, 0.05), transparent 40%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .app-shell {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ——— Sidebar ——— */
+        .sidebar {
+            width: var(--sidebar-width);
+            flex-shrink: 0;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            padding: 1.25rem 0.9rem;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            padding: 0.35rem 0.65rem 1.25rem;
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: 1rem;
+        }
+
+        .brand-mark {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--bg-deep);
+            box-shadow: 0 0 24px rgba(0, 242, 255, 0.25);
+        }
+
+        .brand-text { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em; color: var(--text-muted); text-transform: uppercase; }
+        .brand-title { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
+
+        .nav-section { margin-bottom: 0.35rem; font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); padding: 0.5rem 0.75rem; }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            padding: 0.65rem 0.85rem;
+            border-radius: var(--radius-sm);
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+            margin-bottom: 0.2rem;
+        }
+
+        .nav-item:hover {
+            background: rgba(0, 242, 255, 0.06);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(0, 242, 255, 0.15), transparent);
+            color: var(--accent-cyan);
+            box-shadow: inset 0 0 0 1px var(--border-subtle);
+        }
+
+        .nav-item svg { width: 20px; height: 20px; opacity: 0.85; flex-shrink: 0; }
+
+        .nav-item.disabled { opacity: 0.45; pointer-events: none; }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 1rem;
+        }
+
+        .user-card {
+            padding: 1rem;
+            border-radius: var(--radius);
+            background: linear-gradient(145deg, rgba(22, 27, 34, 0.95), rgba(18, 22, 31, 0.98));
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 0 40px rgba(0, 242, 255, 0.06);
+        }
+
+        .user-card p { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent-cyan); margin-bottom: 0.5rem; }
+        .user-row { display: flex; align-items: center; gap: 0.65rem; }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent-violet), var(--accent-blue));
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+        .user-name { font-weight: 600; font-size: 0.9rem; }
+        .user-role { font-size: 0.75rem; color: var(--text-dim); }
+
+        /* ——— Main ——— */
+        .main {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            padding: 1.1rem 1.75rem;
+            border-bottom: 1px solid var(--border-subtle);
+            background: rgba(11, 14, 20, 0.65);
+            backdrop-filter: blur(12px);
+        }
+
+        .top-bar h1 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .top-bar .subtitle {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .clock {
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(34, 197, 94, 0.12);
+            color: var(--success);
+            border: 1px solid rgba(34, 197, 94, 0.35);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 10px var(--success);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.45; }
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-card);
+            color: var(--text-muted);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            transition: border-color 0.15s, color 0.15s;
+        }
+
+        .icon-btn:hover { border-color: var(--border-glow); color: var(--accent-cyan); }
+
+        .content {
+            padding: 1.5rem 1.75rem 2.5rem;
+            flex: 1;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.25rem;
+        }
+
+        @media (max-width: 1100px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius);
+            padding: 1.35rem 1.5rem;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.15rem;
+        }
+
+        .card-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .card-hint { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+        /* Upload */
+        #main-upload .drop-zone {
+            border: 1px dashed rgba(0, 242, 255, 0.28);
+            border-radius: var(--radius);
+            padding: 2rem 1.5rem;
+            text-align: center;
+            background: rgba(0, 242, 255, 0.03);
+            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        #main-upload .drop-zone:hover,
+        #main-upload .drop-zone.dragover {
+            border-color: var(--accent-cyan);
+            background: rgba(0, 242, 255, 0.07);
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.08);
+        }
+
+        .drop-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 1rem;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(0, 242, 255, 0.2), rgba(59, 130, 246, 0.15));
+            display: grid;
+            place-items: center;
+            color: var(--accent-cyan);
+        }
+
+        .drop-zone p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.35rem; }
+        .drop-zone .sub { font-size: 0.78rem; color: var(--text-dim); }
+
+        #upload-form { position: relative; }
+
+        /* Keep input out of the layout and never capture pointer events (fixes blocked Submit in some browsers). */
+        .file-input-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            clip-path: inset(50%);
+            white-space: nowrap;
+            border: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .btn-primary-action {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            margin-top: 1.15rem;
+            padding: 0.85rem 1.25rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: var(--font);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--bg-deep);
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
+            box-shadow: 0 4px 24px rgba(0, 242, 255, 0.25);
+            transition: transform 0.12s, box-shadow 0.12s;
+        }
+
+        .btn-primary-action:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 32px rgba(0, 242, 255, 0.35);
+        }
+
+        .btn-primary-action:active { transform: translateY(0); }
+
+        .progress-wrap {
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .progress-wrap.visible { display: block; }
+
+        .progress-label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.4rem; }
+        .progress-track {
+            height: 6px;
+            border-radius: 99px;
+            background: rgba(255, 255, 255, 0.06);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 35%;
+            border-radius: 99px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-violet));
+            animation: progress-slide 1.2s ease-in-out infinite;
+        }
+
+        @keyframes progress-slide {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(280%); }
+        }
+
+        /* Summary / gauge */
+        .summary-inner { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
+
+        .gauge {
+            --gauge-pct: 0;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(var(--accent-cyan) calc(var(--gauge-pct) * 1%), rgba(255,255,255,0.06) 0);
+            display: grid;
+            place-items: center;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .gauge::after {
+            content: "";
+            position: absolute;
+            inset: 10px;
+            border-radius: 50%;
+            background: var(--bg-card);
+        }
+
+        .gauge-label {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .gauge-label span { display: block; font-size: 1.1rem; font-weight: 700; font-family: var(--font-mono); color: var(--accent-cyan); }
+        .gauge-label small { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; }
+
+        .summary-detail { flex: 1; min-width: 200px; }
+
+        .diagnosis-line {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.35rem;
+        }
+
+        .conf-line { font-size: 0.9rem; color: var(--text-muted); }
+
+        .bar-list { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.65rem; }
+
+        .bar-row { display: grid; grid-template-columns: 100px 1fr 48px; align-items: center; gap: 0.65rem; font-size: 0.78rem; }
+        .bar-name { color: var(--text-muted); }
+        .bar-track { height: 8px; border-radius: 99px; background: rgba(255,255,255,0.06); overflow: hidden; }
+        .bar-fill {
+            height: 100%;
+            border-radius: 99px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+            width: 0%;
+            transition: width 0.6s ease;
+        }
+        .bar-pct { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-dim); text-align: right; }
+
+        .empty-state {
+            padding: 2rem 1rem;
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        /* Results images */
+        .results-block { margin-top: 1.25rem; }
+
+        .compare-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .compare-grid { grid-template-columns: 1fr; }
+        }
+
+        .compare-grid.lime-extra {
+            margin-top: 1rem;
+            grid-template-columns: 1fr;
+        }
+
+        .lime-span {
+            max-width: 100%;
+        }
+
+        .img-frame {
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            border: 1px solid var(--border-subtle);
+            background: rgba(0,0,0,0.25);
+        }
+
+        .img-frame .caption {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .img-frame img {
+            width: 100%;
+            display: block;
+            max-height: 340px;
+            object-fit: contain;
+        }
+
+        .results-panel {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 1.25rem;
+        }
+
+        @media (max-width: 992px) {
+            .results-panel { grid-template-columns: 1fr; }
+        }
+
+        .explain-card .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .toggle-row span { font-size: 0.85rem; font-weight: 600; }
+
+        .fake-toggle {
+            width: 44px;
+            height: 24px;
+            border-radius: 99px;
+            background: rgba(0, 242, 255, 0.25);
+            position: relative;
+        }
+
+        .fake-toggle::after {
+            content: "";
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            top: 3px;
+            right: 4px;
+            box-shadow: 0 0 12px var(--accent-cyan);
+        }
+
+        .meta-rows { display: flex; flex-direction: column; gap: 0.55rem; font-size: 0.8rem; }
+        .meta-rows dt { color: var(--text-dim); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; }
+        .meta-rows dd { font-weight: 600; color: var(--text-primary); }
+
+        /* Report CTA */
+        .report-cta {
+            margin-top: 1.25rem;
+            padding: 1.25rem 1.5rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-subtle);
+            background: linear-gradient(90deg, rgba(22, 27, 34, 0.95), rgba(18, 24, 36, 0.98));
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .report-cta h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem; }
+        .report-cta p { font-size: 0.8rem; color: var(--text-muted); max-width: 520px; }
+
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.35rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font);
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            color: var(--text-primary);
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 1px solid var(--border-glow);
+            box-shadow: 0 0 24px rgba(0, 242, 255, 0.12);
+            transition: transform 0.12s, box-shadow 0.12s;
+        }
+
+        .btn-download:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 0 32px rgba(0, 242, 255, 0.2);
+            color: var(--accent-cyan);
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(11, 14, 20, 0.82);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: none;
+            pointer-events: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+            pointer-events: auto;
+        }
+
+        .loading-overlay p { color: var(--text-muted); font-size: 0.9rem; }
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 3px solid var(--border-subtle);
+            border-top-color: var(--accent-cyan);
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+
+<body>
+    <div id="loading-overlay" class="loading-overlay" aria-live="polite" aria-busy="false">
+        <div class="spinner"></div>
+        <p>Generating explainability results… Please wait.</p>
+    </div>
+
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-mark">AI</div>
+                <div>
+                    <div class="brand-text">Clinical Intelligence</div>
+                    <div class="brand-title">Brain MRI Suite</div>
+                </div>
+            </div>
+
+            <div class="nav-section">Navigation</div>
+            <a class="nav-item" href="#">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                Dashboard
+            </a>
+            <a class="nav-item active" href="#main-upload">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" stroke-linecap="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                Upload MRI
+            </a>
+            <a class="nav-item {% if not result %}disabled{% endif %}" href="{% if result %}#results-panel{% else %}#{% endif %}">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" stroke-linecap="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                Results History
+            </a>
+            <a class="nav-item {% if not result %}disabled{% endif %}" href="{% if result %}{% url 'download_report' %}{% else %}#{% endif %}">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Reports
+            </a>
+            <a class="nav-item" href="#">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Settings
+            </a>
+
+            <div class="sidebar-footer">
+                <div class="user-card">
+                    <p>AI Brain Tumor Diagnostic System</p>
+                    <div class="user-row">
+                        <div class="avatar">FA</div>
+                        <div>
+                            <div class="user-name">Faizan Ali</div>
+                            <div class="user-role">Research workspace</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="main">
+            <header class="top-bar">
+                <div>
+                    <h1>AI Brain Tumor Diagnostic System</h1>
+                    <p class="subtitle">Deep Learning + XAI — MRI classification pipeline</p>
+                </div>
+                <div class="top-bar-right">
+                    <span class="clock" id="live-clock"></span>
+                    <span class="status-pill"><span class="status-dot"></span> Model ready</span>
+                    <button type="button" class="icon-btn" title="Notifications" aria-label="Notifications">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                    </button>
+                    <button type="button" class="icon-btn" title="Profile" aria-label="Profile">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    </button>
+                </div>
+            </header>
+
+            <main class="content">
+                <div class="grid-2">
+                    <section class="card" id="main-upload">
+                        <div class="card-header">
+                            <div>
+                                <h2 class="card-title">Upload MRI for tumor detection</h2>
+                                <p class="card-hint">Supports standard MRI slices (image upload). Same analysis pipeline as before.</p>
+                            </div>
+                        </div>
+                        <form id="upload-form" method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <input type="file" class="file-input-hidden" id="file" name="file" accept="image/*" required>
+                            <div class="drop-zone" id="drop-zone" role="button" tabindex="0" aria-label="Select MRI image file">
+                                <div class="drop-icon">
+                                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" stroke-linecap="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                                </div>
+                                <p><strong>Drag and drop</strong> an MRI scan, or click to browse.</p>
+                                <p class="sub" id="file-name-label">No file selected</p>
+                            </div>
+                            <button type="submit" class="btn-primary-action">Upload and Analyze</button>
+                            <div class="progress-wrap" id="inline-progress">
+                                <div class="progress-label">Generating explainability results… Please wait.</div>
+                                <div class="progress-track"><div class="progress-fill"></div></div>
+                            </div>
+                        </form>
+                    </section>
+
+                    <section class="card">
+                        <div class="card-header">
+                            <div>
+                                <h2 class="card-title">Detection summary</h2>
+                                <p class="card-hint">Model confidence and class highlights from the latest forward pass.</p>
+                            </div>
+                        </div>
+                        {% if result %}
+                        <div class="summary-inner" id="summary-live" data-confidence="{{ confidence }}">
+                            <div class="gauge" id="conf-gauge" style="--gauge-pct: 0">
+                                <div class="gauge-label">
+                                    <span id="gauge-value">{{ confidence }}</span>
+                                    <small>Confidence</small>
+                                </div>
+                            </div>
+                            <div class="summary-detail">
+                                <p class="diagnosis-line">{{ result }}</p>
+                                <p class="conf-line">Confidence: {{ confidence }}</p>
+                                <div class="bar-list" id="class-bars">
+                                    {% with r=result|lower %}
+                                    <div class="bar-row" data-key="meningioma">
+                                        <span class="bar-name">Meningioma</span>
+                                        <div class="bar-track"><div class="bar-fill" data-active="{% if 'meningioma' in r %}1{% else %}0{% endif %}"></div></div>
+                                        <span class="bar-pct js-pct">—</span>
+                                    </div>
+                                    <div class="bar-row" data-key="glioma">
+                                        <span class="bar-name">Glioma</span>
+                                        <div class="bar-track"><div class="bar-fill" data-active="{% if 'glioma' in r %}1{% else %}0{% endif %}"></div></div>
+                                        <span class="bar-pct js-pct">—</span>
+                                    </div>
+                                    <div class="bar-row" data-key="pituitary">
+                                        <span class="bar-name">Pituitary</span>
+                                        <div class="bar-track"><div class="bar-fill" data-active="{% if 'pituitary' in r %}1{% else %}0{% endif %}"></div></div>
+                                        <span class="bar-pct js-pct">—</span>
+                                    </div>
+                                    <div class="bar-row" data-key="notumor">
+                                        <span class="bar-name">No tumor</span>
+                                        <div class="bar-track"><div class="bar-fill" data-active="{% if 'no tumor' in r or 'notumor' in r %}1{% else %}0{% endif %}"></div></div>
+                                        <span class="bar-pct js-pct">—</span>
+                                    </div>
+                                    {% endwith %}
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="empty-state">
+                            Run an upload to see predicted class, confidence ring, and per-class emphasis (predicted class uses model confidence; others remain at baseline).
+                        </div>
+                        {% endif %}
+                    </section>
+                </div>
+
+                {% if result %}
+                <div id="results-panel" class="results-block">
+                    <section class="card">
+                        <div class="card-header">
+                            <div>
+                                <h2 class="card-title">Tumor detection results</h2>
+                                <p class="card-hint">Original upload alongside occlusion / LIME explanations (when available).</p>
+                            </div>
+                        </div>
+                        <div class="results-panel">
+                            <div>
+                                <div class="compare-grid">
+                                    <div class="img-frame">
+                                        <img src="{{ file_path }}" alt="Uploaded MRI">
+                                        <div class="caption">Original image</div>
+                                    </div>
+                                    {% if xai_path %}
+                                    <div class="img-frame">
+                                        <img src="{{ xai_path }}" alt="XAI heatmap">
+                                        <div class="caption">XAI heatmap</div>
+                                    </div>
+                                    {% elif lime_path %}
+                                    <div class="img-frame">
+                                        <img src="{{ lime_path }}" alt="LIME explanation">
+                                        <div class="caption">LIME explanation</div>
+                                    </div>
+                                    {% else %}
+                                    <div class="img-frame">
+                                        <img src="{{ file_path }}" alt="Uploaded MRI">
+                                        <div class="caption">No separate heatmap generated</div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% if lime_path and xai_path %}
+                                <div class="compare-grid lime-extra">
+                                    <div class="img-frame lime-span">
+                                        <img src="{{ lime_path }}" alt="LIME explanation">
+                                        <div class="caption">LIME explanation</div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="card explain-card" style="padding:1.1rem 1.25rem;">
+                                <div class="toggle-row">
+                                    <span>AI explanation panel</span>
+                                    <div class="fake-toggle" aria-hidden="true"></div>
+                                </div>
+                                <dl class="meta-rows">
+                                    <div>
+                                        <dt>System</dt>
+                                        <dd>AI Brain Tumor — MRI</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Prediction</dt>
+                                        <dd>{{ result }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Confidence</dt>
+                                        <dd>{{ confidence }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Session</dt>
+                                        <dd>Current analysis</dd>
+                                    </div>
+                                </dl>
+                                <div class="bar-list" style="margin-top:1rem;">
+                                    {% with r=result|lower %}
+                                    <div class="bar-row">
+                                        <span class="bar-name">Primary signal</span>
+                                        <div class="bar-track"><div class="bar-fill" style="width: {{ confidence }}"></div></div>
+                                        <span class="bar-pct">{{ confidence }}</span>
+                                    </div>
+                                    {% endwith %}
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div class="report-cta">
+                        <div>
+                            <h3>Generate diagnostic report</h3>
+                            <p>Export a PDF including findings, confidence, and embedded visualizations (original MRI, XAI, LIME when present) for documentation or demo.</p>
+                        </div>
+                        <a href="{% url 'download_report' %}" class="btn-download">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            Download PDF report
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </main>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var clock = document.getElementById('live-clock');
+            function tick() {
+                var d = new Date();
+                clock.textContent = d.toLocaleString(undefined, {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+            tick();
+            setInterval(tick, 30000);
+
+            var input = document.getElementById('file');
+            var zone = document.getElementById('drop-zone');
+            var nameLabel = document.getElementById('file-name-label');
+            if (input && zone) {
+                zone.addEventListener('click', function (e) {
+                    if (e.target.closest('button')) return;
+                    input.click();
+                });
+                input.addEventListener('change', function () {
+                    nameLabel.textContent = input.files && input.files.length ? input.files[0].name : 'No file selected';
+                });
+                zone.addEventListener('dragover', function (e) {
+                    e.preventDefault();
+                    zone.classList.add('dragover');
+                });
+                zone.addEventListener('dragleave', function () {
+                    zone.classList.remove('dragover');
+                });
+                zone.addEventListener('drop', function (e) {
+                    e.preventDefault();
+                    zone.classList.remove('dragover');
+                    if (e.dataTransfer.files && e.dataTransfer.files.length) {
+                        input.files = e.dataTransfer.files;
+                        input.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                });
+                zone.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        input.click();
+                    }
+                });
+            }
+
+            var form = document.getElementById('upload-form');
+            var overlay = document.getElementById('loading-overlay');
+            var inlineProg = document.getElementById('inline-progress');
+            if (form && overlay) {
+                form.addEventListener('submit', function () {
+                    overlay.classList.add('show');
+                    overlay.setAttribute('aria-busy', 'true');
+                    if (inlineProg) inlineProg.classList.add('visible');
+                });
+            }
+
+            var summary = document.getElementById('summary-live');
+            if (summary) {
+                var rawConf = summary.getAttribute('data-confidence') || '0';
+                var pct = parseFloat(String(rawConf).replace(/%/g, ''));
+                if (isNaN(pct)) pct = 0;
+                var gauge = document.getElementById('conf-gauge');
+                if (gauge) gauge.style.setProperty('--gauge-pct', String(Math.min(100, Math.max(0, pct))));
+
+                var rows = summary.querySelectorAll('.bar-row');
+                rows.forEach(function (row) {
+                    var fill = row.querySelector('.bar-fill');
+                    var pctEl = row.querySelector('.js-pct');
+                    if (!fill || !pctEl) return;
+                    var active = fill.getAttribute('data-active') === '1';
+                    if (active) {
+                        fill.style.width = pct + '%';
+                        pctEl.textContent = rawConf.indexOf('%') >= 0 ? rawConf : pct + '%';
+                    } else {
+                        fill.style.width = '0%';
+                        pctEl.textContent = '—';
+                    }
+                });
+            }
+        })();
+    </script>
+</body>
+</html>
