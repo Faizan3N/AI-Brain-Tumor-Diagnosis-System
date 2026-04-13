@@ -1,2 +1,0 @@
-# Additions for PDF report download (install into your existing venv)
-reportlab>=4.4
