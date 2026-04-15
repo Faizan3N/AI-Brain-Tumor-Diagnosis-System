@@ -11,8 +11,16 @@ from tensorflow.keras.models import load_model
 from keras.preprocessing.image import load_img, img_to_array
 from keras.layers import Dense
 from keras.utils import get_custom_objects
-from lime import lime_image
-from skimage.segmentation import mark_boundaries
+
+try:
+    from lime import lime_image
+except ImportError:
+    lime_image = None
+
+try:
+    from skimage.segmentation import mark_boundaries
+except ImportError:
+    mark_boundaries = None
 
 
 class PatchedDense(Dense):
@@ -632,6 +640,10 @@ def generate_xai_overlay(image_path):
 
 
 def generate_lime_overlay(image_path):
+    if lime_image is None or mark_boundaries is None:
+        # Keep the app functional even if optional explainability deps are missing.
+        return None
+
     image_size = 128
     original_img = load_img(image_path, target_size=(image_size, image_size))
     image_uint8 = img_to_array(original_img).astype(np.uint8)
