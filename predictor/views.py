@@ -30,8 +30,13 @@ class PatchedDense(Dense):
 
 get_custom_objects()["Dense"] = PatchedDense
 
+
+def _log_pipeline(message):
+    print(f"[Brain Tumor Pipeline] {message}", flush=True)
+
 MODEL_PATH = os.path.join(settings.BASE_DIR, "models", "model.h5")
 model = load_model(MODEL_PATH)
+_log_pipeline("Model loaded successfully")
 class_labels = ["glioma", "meningioma", "notumor", "pituitary"]
 CLASS_DISPLAY = {
     "glioma": "Glioma",
@@ -109,6 +114,7 @@ def _interpretation_blurb(top_key):
 
 def download_report_pdf(request):
     """Build a formal multi-section PDF of the last detection (session)."""
+    _log_pipeline("Generating PDF report")
     from io import BytesIO
 
     from reportlab.graphics import renderPDF
@@ -587,6 +593,7 @@ def predict_tumor(image_path):
 
 def generate_xai_overlay(image_path):
     # Model-agnostic XAI: occlusion sensitivity map.
+    _log_pipeline("Generating XAI overlay")
     image_size = 128
     original_img = load_img(image_path, target_size=(image_size, image_size))
     original_arr = img_to_array(original_img) / 255.0
@@ -644,6 +651,7 @@ def generate_lime_overlay(image_path):
         # Keep the app functional even if optional explainability deps are missing.
         return None
 
+    _log_pipeline("Generating LIME overlay")
     image_size = 128
     original_img = load_img(image_path, target_size=(image_size, image_size))
     image_uint8 = img_to_array(original_img).astype(np.uint8)
@@ -688,22 +696,27 @@ def generate_lime_overlay(image_path):
 
 def index(request):
     if request.method == "POST" and request.FILES.get("file"):
+        _log_pipeline("Upload received - starting analysis (0%)")
         uploaded_file = request.FILES["file"]
         storage = FileSystemStorage(location=settings.MEDIA_ROOT)
         filename = storage.save(uploaded_file.name, uploaded_file)
         file_location = storage.path(filename)
 
+        _log_pipeline("File saved - running prediction (25%)")
         result, confidence, probs, top_key = predict_tumor(file_location)
         xai_path = None
         lime_path = None
         try:
+            _log_pipeline("Prediction complete - creating XAI overlay (50%)")
             xai_path = generate_xai_overlay(file_location)
         except Exception:
             xai_path = None
         try:
+            _log_pipeline("XAI complete - creating LIME overlay (75%)")
             lime_path = generate_lime_overlay(file_location)
         except Exception:
             lime_path = None
+        _log_pipeline("Analysis complete - preparing results (100%)")
         request.session["mri_report"] = {
             "result": result,
             "confidence": f"{confidence * 100:.2f}%",

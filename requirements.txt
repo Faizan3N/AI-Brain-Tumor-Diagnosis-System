@@ -1,4 +1,22 @@
-# Additions for PDF report download (install into your existing venv)
-reportlab>=4.4
-lime>=0.2.0.1
+# Django Web Framework
+Django>=6.0.2
+
+# Deep Learning & AI
+TensorFlow>=2.13.0
+Keras>=2.13.0
+numpy>=1.24.0
+
+# Image Processing
+Pillow>=9.0.0
 scikit-image>=0.24
+
+# Explainability & Visualization
+lime>=0.2.0.1
+scikit-learn>=1.0.0
+matplotlib>=3.5.0
+
+# PDF Report Generation
+reportlab>=4.4
+
+# Utilities
+urllib3>=1.26.0
