@@ -178,7 +178,7 @@
         }
 
         .top-bar h1 {
-            font-size: 1.35rem;
+            font-size: 1.6rem;
             font-weight: 700;
             letter-spacing: -0.02em;
         }
@@ -543,6 +543,110 @@
         .meta-rows dt { color: var(--text-dim); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; }
         .meta-rows dd { font-weight: 600; color: var(--text-primary); }
 
+        .dashboard-panel {
+            margin-bottom: 1.15rem;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(180px, 1fr));
+            gap: 0.85rem;
+        }
+
+        .dash-stat {
+            border: 1px solid var(--border-subtle);
+            background: linear-gradient(145deg, rgba(22, 27, 34, 0.95), rgba(18, 22, 31, 0.98));
+            border-radius: var(--radius-sm);
+            padding: 0.8rem 0.9rem;
+        }
+
+        .dash-stat .label {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-dim);
+            margin-bottom: 0.35rem;
+        }
+
+        .dash-stat .value {
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+
+        .soft-card {
+            border: 1px solid var(--border-subtle);
+            background: rgba(22, 27, 34, 0.82);
+            border-radius: var(--radius);
+            padding: 1rem 1.1rem;
+        }
+
+        .soft-card h3 {
+            font-size: 0.95rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .soft-card p {
+            color: var(--text-muted);
+            font-size: 0.82rem;
+        }
+
+        .settings-panel {
+            margin-top: 1.25rem;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(200px, 1fr));
+            gap: 0.85rem;
+        }
+
+        .setting-item {
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            background: rgba(15, 23, 42, 0.72);
+            padding: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+
+        .setting-item h4 {
+            font-size: 0.84rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .setting-item p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .setting-toggle {
+            width: 44px;
+            height: 24px;
+            border-radius: 999px;
+            border: 1px solid var(--border-glow);
+            background: rgba(30, 41, 59, 0.65);
+            position: relative;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .setting-toggle::after {
+            content: "";
+            width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            background: #93c5fd;
+            position: absolute;
+            top: 2px;
+            left: 3px;
+            transition: transform 0.15s;
+        }
+
+        .setting-toggle.enabled {
+            background: rgba(0, 242, 255, 0.24);
+        }
+
+        .setting-toggle.enabled::after {
+            transform: translateX(19px);
+            background: var(--accent-cyan);
+        }
+
         /* Report CTA */
         .report-cta {
             margin-top: 1.25rem;
@@ -583,6 +687,12 @@
             color: var(--accent-cyan);
         }
 
+        .btn-download.disabled {
+            opacity: 0.6;
+            pointer-events: none;
+            box-shadow: none;
+        }
+
         /* Loading overlay */
         .loading-overlay {
             position: fixed;
@@ -614,6 +724,13 @@
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 992px) {
+            .dashboard-panel,
+            .settings-panel {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 
@@ -625,32 +742,24 @@
 
     <div class="app-shell">
         <aside class="sidebar">
-            <div class="brand">
-                <div class="brand-mark">AI</div>
-                <div>
-                    <div class="brand-text">Clinical Intelligence</div>
-                    <div class="brand-title">Brain MRI Suite</div>
-                </div>
-            </div>
-
             <div class="nav-section">Navigation</div>
-            <a class="nav-item" href="#">
+            <a class="nav-item" href="#dashboard-panel" data-target="dashboard-panel">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                 Dashboard
             </a>
-            <a class="nav-item active" href="#main-upload">
+            <a class="nav-item active" href="#main-upload" data-target="main-upload">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" stroke-linecap="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
                 Upload MRI
             </a>
-            <a class="nav-item {% if not result %}disabled{% endif %}" href="{% if result %}#results-panel{% else %}#{% endif %}">
+            <a class="nav-item" href="#results-panel" data-target="results-panel">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" stroke-linecap="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                 Results History
             </a>
-            <a class="nav-item {% if not result %}disabled{% endif %}" href="{% if result %}{% url 'download_report' %}{% else %}#{% endif %}">
+            <a class="nav-item" href="#reports-panel" data-target="reports-panel">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 Reports
             </a>
-            <a class="nav-item" href="#">
+            <a class="nav-item" href="#settings-panel" data-target="settings-panel">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 Settings
             </a>
@@ -662,7 +771,6 @@
                         <div class="avatar">FA</div>
                         <div>
                             <div class="user-name">Faizan Ali</div>
-                            <div class="user-role">Research workspace</div>
                         </div>
                     </div>
                 </div>
@@ -688,6 +796,21 @@
             </header>
 
             <main class="content">
+                <section id="dashboard-panel" class="dashboard-panel">
+                    <div class="dash-stat">
+                        <div class="label">System Mode</div>
+                        <div class="value">Admin</div>
+                    </div>
+                    <div class="dash-stat">
+                        <div class="label">Latest Session</div>
+                        <div class="value">{% if result %}Ready{% else %}Waiting for MRI{% endif %}</div>
+                    </div>
+                    <div class="dash-stat">
+                        <div class="label">Model Status</div>
+                        <div class="value">Online</div>
+                    </div>
+                </section>
+
                 <div class="grid-2">
                     <section class="card" id="main-upload">
                         <div class="card-header">
@@ -766,8 +889,8 @@
                     </section>
                 </div>
 
-                {% if result %}
                 <div id="results-panel" class="results-block">
+                    {% if result %}
                     <section class="card">
                         <div class="card-header">
                             <div>
@@ -843,19 +966,48 @@
                             </div>
                         </div>
                     </section>
-
-                    <div class="report-cta">
-                        <div>
-                            <h3>Generate diagnostic report</h3>
-                            <p>Export a PDF including findings, confidence, and embedded visualizations (original MRI, XAI, LIME when present) for documentation or demo.</p>
-                        </div>
-                        <a href="{% url 'download_report' %}" class="btn-download">
-                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                            Download PDF report
-                        </a>
-                    </div>
+                    {% else %}
+                    <section class="soft-card">
+                        <h3>Results History</h3>
+                        <p>No result is available yet. Upload an MRI image to generate the first diagnostic record for this session.</p>
+                    </section>
+                    {% endif %}
                 </div>
-                {% endif %}
+
+                <section id="reports-panel" class="report-cta">
+                    <div>
+                        <h3>Generate diagnostic report</h3>
+                        <p>Export a PDF including findings, confidence, and embedded visualizations (original MRI, XAI, LIME when present) for documentation or demo.</p>
+                    </div>
+                    {% if result %}
+                    <a href="{% url 'download_report' %}" class="btn-download">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        Download PDF report
+                    </a>
+                    {% else %}
+                    <a href="#" class="btn-download disabled">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        Upload MRI to enable report
+                    </a>
+                    {% endif %}
+                </section>
+
+                <section id="settings-panel" class="settings-panel">
+                    <div class="setting-item">
+                        <div>
+                            <h4>Auto-highlight results</h4>
+                            <p>Keep Results History selected after each prediction run.</p>
+                        </div>
+                        <button type="button" class="setting-toggle" id="toggle-highlight" aria-label="Toggle auto highlight"></button>
+                    </div>
+                    <div class="setting-item">
+                        <div>
+                            <h4>Smart notifications</h4>
+                            <p>Enable lightweight admin alerts for new analysis sessions.</p>
+                        </div>
+                        <button type="button" class="setting-toggle" id="toggle-notify" aria-label="Toggle notifications"></button>
+                    </div>
+                </section>
             </main>
         </div>
     </div>
@@ -945,6 +1097,33 @@
                     }
                 });
             }
+
+            var navItems = document.querySelectorAll('.nav-item[data-target]');
+            navItems.forEach(function (item) {
+                item.addEventListener('click', function (e) {
+                    var targetId = item.getAttribute('data-target');
+                    var target = targetId ? document.getElementById(targetId) : null;
+                    if (!target) return;
+                    e.preventDefault();
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    navItems.forEach(function (nav) { nav.classList.remove('active'); });
+                    item.classList.add('active');
+                });
+            });
+
+            function bindSettingToggle(toggleId, storageKey) {
+                var btn = document.getElementById(toggleId);
+                if (!btn) return;
+                var enabled = localStorage.getItem(storageKey) === '1';
+                if (enabled) btn.classList.add('enabled');
+                btn.addEventListener('click', function () {
+                    btn.classList.toggle('enabled');
+                    localStorage.setItem(storageKey, btn.classList.contains('enabled') ? '1' : '0');
+                });
+            }
+
+            bindSettingToggle('toggle-highlight', 'admin_toggle_highlight');
+            bindSettingToggle('toggle-notify', 'admin_toggle_notify');
         })();
     </script>
 </body>

@@ -1,4 +1,5 @@
 import os
+from uuid import uuid4
 import numpy as np
 from django.core.files.storage import FileSystemStorage
 from django.core.files.base import ContentFile
@@ -138,8 +139,8 @@ def download_report_pdf(request):
     text_muted = colors.HexColor("#5c6570")
     success_green = colors.HexColor("#1b5e20")
 
-    now = timezone.now()
-    report_id = f"BT-{now.strftime('%Y%m%d')}-001"
+    now = timezone.localtime(timezone.now())
+    report_id = f"BT-{now.strftime('%Y%m%d-%H%M%S')}-{uuid4().hex[:4].upper()}"
 
     probs = dict(payload.get("probs") or {})
     top_key = payload.get("top_class")
